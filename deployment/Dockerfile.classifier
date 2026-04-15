@@ -1,0 +1,26 @@
+# deployment/Dockerfile.classifier
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Dependencias sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Dependencias Python
+COPY deployment/requirements.classifier.txt .
+RUN pip install --no-cache-dir -r requirements.classifier.txt
+
+# Código fuente
+COPY classifier_api/ ./classifier_api/
+COPY shared/ ./shared/
+COPY pyproject.toml .
+
+# Instala el proyecto como paquete para que 'shared' sea importable
+RUN pip install --no-cache-dir -e .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "classifier_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
