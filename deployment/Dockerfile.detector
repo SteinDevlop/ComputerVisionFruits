@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Dependencias sistema — OpenCV necesita libGL
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -23,6 +23,6 @@ COPY shared/ ./shared/
 COPY pyproject.toml .
 
 # Instala el proyecto como paquete para que 'shared' sea importable
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir .
 
 CMD ["python", "-m", "detector_agent.main"]

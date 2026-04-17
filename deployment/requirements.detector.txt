@@ -1,9 +1,27 @@
 # deployment/requirements.detector.txt
 
-opencv-python-headless==4.9.0.80
-numpy==1.26.4
-httpx==0.27.0
-pillow==10.3.0
+opencv-python-headless==4.13.0.92
+numpy==2.4.4
+httpx==0.28.1 
+pillow==12.2.0
 
 # TODO: agregar YOLO
 # ultralytics==8.2.0   # incluye YOLO v8/v11
+# ===== CORE =====
+opencv-python-headless==4.13.0.92
+pillow==12.2.0
+
+# ===== HTTP CLIENT (para enviar al clasificador) =====
+
+httpx==0.28.1
+
+# ===== YOLO DETECTOR =====
+ultralytics==8.2.0
+
+
+
+# ===== UTILIDADES =====
+tqdm==4.66.4
+
+# ===== SERIALIZACIÓN / BASE64 (opcional pero útil) =====
+pydantic>=2.0.0

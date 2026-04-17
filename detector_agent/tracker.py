@@ -1,70 +1,74 @@
-# detector_agent/tracker.py — asigna ID persistente a cada objeto
-
-from dataclasses import dataclass, field
-
-import numpy as np
-
+from dataclasses import dataclass
 from detector_agent.detector import Detection
 
 
 @dataclass
 class TrackedObject:
-    """Objeto con ID de tracking asignado."""
     id_objeto: int
     detection: Detection
-    frames_sin_ver: int = 0  # cuantos frames no fue detectado
+    frames_sin_ver: int = 0
 
 
 class FruitTracker:
-    """Tracker simple basado en IoU. Reemplazar con ByteTrack/DeepSORT si se necesita."""
 
-    def __init__(self, iou_threshold: float = 0.3, max_frames_perdido: int = 5):
+    def __init__(self, iou_threshold=0.3, max_frames_perdido=5):
         self.iou_threshold = iou_threshold
         self.max_frames_perdido = max_frames_perdido
-        self._next_id: int = 0
-        self._objetos: dict[int, TrackedObject] = {}
-
-    def _siguiente_id(self) -> int:
-        """Genera ID único incremental."""
-        id_ = self._next_id
-        self._next_id += 1
-        return id_
-
-    def _calcular_iou(
-        self, bbox_a: tuple[int, int, int, int], bbox_b: tuple[int, int, int, int]
-    ) -> float:
-        """Calcula Intersection over Union entre dos bboxes.
-
-        Args:
-            bbox_a: (x1, y1, x2, y2)
-            bbox_b: (x1, y1, x2, y2)
-
-        Returns:
-            IoU entre 0.0 y 1.0
-        """
-        # TODO: implementar IoU
-        pass
-
-    def update(self, detecciones: list[Detection]) -> list[TrackedObject]:
-        """Asocia detecciones actuales con objetos trackeados.
-
-        Args:
-            detecciones: lista de Detection del frame actual
-
-        Returns:
-            lista de TrackedObject con IDs asignados
-        """
-        # TODO: matching por IoU entre detecciones y objetos activos
-        # 1. Calcular matriz IoU
-        # 2. Asignar detecciones a objetos existentes
-        # 3. Crear nuevos objetos para detecciones sin match
-        # 4. Incrementar frames_sin_ver para objetos no vistos
-        # 5. Eliminar objetos perdidos por mas de max_frames_perdido
-
-        resultado: list[TrackedObject] = []
-        return resultado
-
-    def limpiar(self) -> None:
-        """Reinicia el estado del tracker."""
-        self._objetos.clear()
         self._next_id = 0
+        self._objetos = {}
+
+    def _iou(self, a, b):
+        x1 = max(a[0], b[0])
+        y1 = max(a[1], b[1])
+        x2 = min(a[2], b[2])
+        y2 = min(a[3], b[3])
+
+        if x2 <= x1 or y2 <= y1:
+            return 0.0
+
+        inter = (x2 - x1) * (y2 - y1)
+
+        area_a = (a[2]-a[0])*(a[3]-a[1])
+        area_b = (b[2]-b[0])*(b[3]-b[1])
+
+        return inter / (area_a + area_b - inter + 1e-6)
+
+    def update(self, detecciones):
+
+        new_objects = {}
+        used = set()
+
+        for det in detecciones:
+            best_id = None
+            best_iou = 0
+
+            for obj_id, obj in self._objetos.items():
+                iou = self._iou(det.bbox, obj.detection.bbox)
+
+                if iou > best_iou:
+                    best_iou = iou
+                    best_id = obj_id
+
+            if best_id is not None and best_iou > self.iou_threshold:
+                obj = self._objetos[best_id]
+                obj.detection = det
+                obj.frames_sin_ver = 0
+                new_objects[best_id] = obj
+                used.add(best_id)
+            else:
+                new_id = self._next_id
+                self._next_id += 1
+
+                new_objects[new_id] = TrackedObject(
+                    id_objeto=new_id,
+                    detection=det
+                )
+
+        for obj_id, obj in self._objetos.items():
+            if obj_id not in used:
+                obj.frames_sin_ver += 1
+                if obj.frames_sin_ver < self.max_frames_perdido:
+                    new_objects[obj_id] = obj
+
+        self._objetos = new_objects
+        return list(self._objetos.values())

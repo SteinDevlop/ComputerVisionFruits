@@ -8,7 +8,7 @@ class DetectorConfig:
     MODEL_PATH = BASE_DIR / "models" / "finetuned" / "detector_best.pt"
     CONFIDENCE_THRESHOLD: float = 0.5
     IOU_THRESHOLD: float = 0.45
-    VIDEO_SOURCE: int | str = 0  # 0 = camara, o path a video
+    VIDEO_SOURCE = "data/test.mp4" # 0 = camara, o path a video
     FRAME_WIDTH: int = 1280
     FRAME_HEIGHT: int = 720
 
