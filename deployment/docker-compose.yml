@@ -1,8 +1,4 @@
 # deployment/docker-compose.yml
-# Levanta los dos agentes como servicios separados
-
-version: "3.9"
-
 services:
 
   classifier_api:

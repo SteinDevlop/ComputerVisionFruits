@@ -20,6 +20,7 @@ RUN pip install --no-cache-dir -r requirements.detector.txt
 # Código fuente
 COPY detector_agent/ ./detector_agent/
 COPY shared/ ./shared/
+COPY data/ ./data/
 COPY pyproject.toml .
 
 # Instala el proyecto como paquete para que 'shared' sea importable

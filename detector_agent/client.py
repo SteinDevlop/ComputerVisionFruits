@@ -46,7 +46,7 @@ class ClassifierClient:
             print(f"[Client] Timeout enviando objeto {id_objeto}")
             return None
         except httpx.HTTPError as e:
-            print(f"[Client] HTTP error: {e}")
+            print(f"[Client] HTTP error: {e} to {self.url}")
             return None
 
     async def clasificar_async(self, id_objeto: int, imagen_b64: str) -> ResultadoClasificacion | None:
