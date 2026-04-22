@@ -35,6 +35,8 @@ async def clasificar(payload: ClasificarRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en inferencia: {e}")
 
+    if confianza < 0.7:
+        fruta = "Desconocida"
     return ClasificarResponse(
         id_objeto=payload.id_objeto,
         fruta=fruta,

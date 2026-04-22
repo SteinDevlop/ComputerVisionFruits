@@ -7,6 +7,7 @@ class TrackedObject:
     id_objeto: int
     detection: Detection
     frames_sin_ver: int = 0
+    clasificado: bool = False
 
 
 class FruitTracker:

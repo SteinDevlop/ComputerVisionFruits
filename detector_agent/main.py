@@ -22,21 +22,38 @@ def procesar_frame(frame, detector, tracker, cropper, client):
     detecciones = detector.detect(frame)
     objetos = tracker.update(detecciones)
 
+    # Definir la zona central de la pantalla (un margen de 20% hacia los lados desde el centro)
+    alto, ancho = frame.shape[:2]
+    centro_x = ancho / 2
+    margen_x = ancho * 0.20  
+
     for obj in objetos:
 
-        # 1. crop de la fruta
-        imagen_b64 = cropper.procesar(frame, obj)
+        if not obj.clasificado:
+            # Calculamos dónde está la fruta en este cuadro
+            x1, y1, x2, y2 = obj.detection.bbox
+            fruta_centro_x = (x1 + x2) / 2
 
-        # 2. envío a API clasificador
-        resultado = client.clasificar(obj.id_objeto, imagen_b64)
+            # Verificamos si la fruta ya llegó a la zona central de la cámara
+            if abs(fruta_centro_x - centro_x) <= margen_x:
+                # 1. crop de la fruta
+                imagen_b64 = cropper.procesar(frame, obj)
 
-        # 3. log simple
-        if resultado:
-            print(
-                f"[API] ID={resultado.id_objeto} | "
-                f"{resultado.fruta} | "
-                f"{resultado.confianza:.2f}"
-            )
+                # 2. envío a API clasificador
+                resultado = client.clasificar(obj.id_objeto, imagen_b64)
+
+                # 3. log simple
+                if resultado:
+                    print(
+                        f"[API] ID={resultado.id_objeto} | "
+                        f"{resultado.fruta} | "
+                        f"{resultado.confianza:.2f}"
+                    )
+                    
+                    # 4. Marcamos como clasificado solo si la IA reconoció la fruta
+                    # Si es desconocida, lo volverá a intentar en el siguiente frame
+                    if resultado.fruta not in ["Unknown Label", "Unknown", "Desconocida"]:
+                        obj.clasificado = True
 
 
 def main():

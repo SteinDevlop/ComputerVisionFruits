@@ -10,6 +10,9 @@ services:
       - "8000:8000"
     volumes:
       - ../models:/app/models:ro          # modelos read-only
+      - ../classifier_api:/app/classifier_api  # Mapea tu código de la API vivo
+      - ../shared:/app/shared                  # Mapea códigos compartidos
+    command: ["uvicorn", "classifier_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"] # Activa el reload automático de FastAPI
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
@@ -29,6 +32,9 @@ services:
         condition: service_healthy
     volumes:
       - ../models:/app/models:ro
+      - ../detector_agent:/app/detector_agent  # Mapea tu agente en vivo
+      - ../shared:/app/shared
+      - ../data:/app/data
       # TODO: montar dispositivo de camara si es necesario
       # devices:
       #   - /dev/video0:/dev/video0

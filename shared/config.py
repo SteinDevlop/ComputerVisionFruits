@@ -9,13 +9,25 @@ class DetectorConfig:
     MODEL_PATH = BASE_DIR / "models" / "finetuned" / "detector_best.pt"
     CONFIDENCE_THRESHOLD: float = 0.5
     IOU_THRESHOLD: float = 0.45
-    VIDEO_SOURCE = "data/test.mp4" # 0 = camara, o path a video
+    VIDEO_SOURCE = "data/prueba.mp4" # 0 = camara, o path a video
     FRAME_WIDTH: int = 1280
     FRAME_HEIGHT: int = 720
 
 class ClassifierConfig:
     MODEL_PATH = BASE_DIR / "models" / "finetuned" / "classifier_best.pt"
-    CLASSES: list[str] = ["manzana", "banano", "naranja", "pera", "mango"]  # TODO: actualizar
+    HF_MODEL_ID: str = "bhumong/fruit-classifier-efficientnet-b0"
+    CLASSES: list[str] = [
+        "Apple", "Apricot", "Avocado", "Banana", "Beans", "Beetroot", "Blackberry",
+        "Blueberry", "Cabbage", "Cactus", "Caju", "Cantaloupe", "Carambula", "Carrot",
+        "Cauliflower", "Cherry", "Chestnut", "Clementine", "Cocona", "Corn", "Cucumber",
+        "Dates", "Eggplant", "Fig", "Ginger", "Gooseberry", "Granadilla", "Grape",
+        "Grapefruit", "Guava", "Hazelnut", "Huckleberry", "Kiwi", "Kohlrabi", "Lemon",
+        "Limes", "Lychee", "Mango", "Mangostan", "Maracuja", "Melon", "Mulberry",
+        "Nectarine", "Nut", "Onion", "Orange", "Papaya", "Passion", "Peach", "Pear",
+        "Pepino", "Pepper", "Physalis", "Pineapple", "Pistachio", "Pitahaya", "Plum",
+        "Pomegranate", "Potato", "Quince", "Rambutan", "Raspberry", "Redcurrant",
+        "Salak", "Strawberry", "Tamarillo", "Tangelo", "Tomato", "Walnut", "Watermelon"
+    ]
     IMAGE_SIZE: int = 224
 
 class APIConfig:
