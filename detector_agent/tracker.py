@@ -15,11 +15,17 @@ class TrackedObject:
         detection: Última detección del objeto
         frames_sin_ver: Contador de frames donde no se vio el objeto
         clasificado: Flag indicando si ya fue clasificado
+        etiqueta: Etiqueta de la clasificación
+        confianza: Score de confianza
+        precio: Precio de la fruta
     """
     id_objeto: int
     detection: Detection
     frames_sin_ver: int = 0
     clasificado: bool = False
+    etiqueta: str = ""
+    confianza: float = 0.0
+    precio: int = 0
 
 
 class FruitTracker:

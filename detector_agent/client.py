@@ -25,10 +25,12 @@ class ResultadoClasificacion:
         id_objeto: ID del objeto rastreado
         fruta: Nombre de la fruta clasificada
         confianza: Confianza de la clasificación (0.0 a 1.0)
+        precio: Precio asignado a la fruta
     """
     id_objeto: int
     fruta: str
     confianza: float
+    precio: int
 
 
 class ClassifierClient:
@@ -79,6 +81,7 @@ class ClassifierClient:
                 id_objeto=data["id_objeto"],
                 fruta=data["fruta"],
                 confianza=data["confianza"],
+                precio=data.get("precio", 0),
             )
             logger.debug(f"Clasificación exitosa: {resultado}")
             return resultado

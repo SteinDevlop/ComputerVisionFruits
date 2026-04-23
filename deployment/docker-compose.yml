@@ -12,6 +12,7 @@ services:
       - ../models:/app/models:ro          # modelos read-only
       - ../classifier_api:/app/classifier_api  # Mapea tu código de la API vivo
       - ../shared:/app/shared                  # Mapea códigos compartidos
+      - ../database:/app/database
     command: ["uvicorn", "classifier_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"] # Activa el reload automático de FastAPI
     environment:
       - PYTHONUNBUFFERED=1

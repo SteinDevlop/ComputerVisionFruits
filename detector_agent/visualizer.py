@@ -149,9 +149,10 @@ class FrameVisualizer:
                     if object_info and obj.id_objeto in object_info:
                         info = object_info[obj.id_objeto]
                         fruta = info.get("fruta", "Unknown")
+                        precio = info.get("precio", 0)
                         confianza = info.get("confianza", 0.0)
                         info_lines.append(f"{fruta}")
-                        info_lines.append(f"Conf: {confianza:.2%}")
+                        info_lines.append(f"Conf: {confianza:.2%} | ${precio} COP")
                     else:
                         info_lines.append(f"Det: {conf:.2%}")
 

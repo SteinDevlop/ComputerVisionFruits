@@ -69,13 +69,15 @@ def procesar_frame(frame, detector, tracker, cropper, client, object_info, analy
                             print(
                                 f"[API] ID={resultado.id_objeto} | "
                                 f"{resultado.fruta} | "
-                                f"{resultado.confianza:.2f}"
+                                f"{resultado.confianza:.2f} | "
+                                f"${resultado.precio} COP"
                             )
 
                             # Almacenar clasificación
                             object_info[obj.id_objeto] = {
                                 "fruta": resultado.fruta,
-                                "confianza": resultado.confianza
+                                "confianza": resultado.confianza,
+                                "precio": resultado.precio
                             }
 
                             # 4. Marcamos como clasificado solo si la IA reconoció la fruta
