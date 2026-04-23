@@ -7,11 +7,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 class DetectorConfig:
     MODEL_PATH = BASE_DIR / "models" / "finetuned" / "detector_best.pt"
-    CONFIDENCE_THRESHOLD: float = 0.5
+    # Umbrales conservadores - se ajustan dinámicamente si es necesario
+    CONFIDENCE_THRESHOLD: float = 0.40  # Reducido de 0.5 para mejor sensibilidad
     IOU_THRESHOLD: float = 0.45
     VIDEO_SOURCE = "data/prueba.mp4" # 0 = camara, o path a video
     FRAME_WIDTH: int = 1280
     FRAME_HEIGHT: int = 720
+    
+    # Configuración de detección robusta
+    ADAPTIVE_CONFIDENCE: bool = True  # Activa ajuste automático de threshold
+    PREPROCESS_FRAMES: bool = True     # Activa mejora de contraste/brillo
+    MULTI_SCALE_DETECTION: bool = False  # Detección en múltiples escalas (más lento)
 
 class ClassifierConfig:
     MODEL_PATH = BASE_DIR / "models" / "finetuned" / "classifier_best.pt"
