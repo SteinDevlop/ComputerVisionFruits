@@ -10,7 +10,7 @@ class DetectorConfig:
     # Umbrales conservadores - se ajustan dinámicamente si es necesario
     CONFIDENCE_THRESHOLD: float = 0.40  # Reducido de 0.5 para mejor sensibilidad
     IOU_THRESHOLD: float = 0.45
-    VIDEO_SOURCE = "data/prueba.mp4" # 0 = camara, o path a video
+    VIDEO_SOURCE = "data/test2.mp4" # 0 = camara, o path a video
     FRAME_WIDTH: int = 1280
     FRAME_HEIGHT: int = 720
     
