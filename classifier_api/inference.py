@@ -25,8 +25,7 @@ class FruitClassifier:
         self.id2label = None
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        # Define preprocessing transformations
-        # ImageNet stats often used with EfficientNet pre-training
+
         mean = [0.485, 0.456, 0.406]
         std = [0.229, 0.224, 0.225]
         self.preprocess_transform = transforms.Compose([
@@ -44,9 +43,6 @@ class FruitClassifier:
         if model_path:
             # Cargar desde path local si se proporciona
             path = model_path
-            # Aquí se asumiría que el modelo local ya tiene la estructura correcta
-            # y no necesita descargar config.json o id2label.
-            # Para simplificar, nos enfocaremos en la carga desde HF.
             raise NotImplementedError("Carga de modelo local no implementada para este ejemplo.")
         else:
             # Cargar desde Hugging Face Hub
@@ -123,5 +119,4 @@ class FruitClassifier:
         return predicted_label, confidence
 
 
-# Singleton — se reutiliza en toda la app
 classifier = FruitClassifier()
