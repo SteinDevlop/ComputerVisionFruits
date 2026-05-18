@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 libsm6 libxrender1 libxext6 libgl1 curl ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY deployment/requirements.detector.txt ./requirements.detector.txt
+RUN pip install --no-cache-dir -r requirements.detector.txt
+
+COPY src/backend/detector_agent/ ./detector_agent/
+COPY src/backend/shared/ ./shared/
+COPY src/backend/database/ ./database/
+
+ENV PYTHONPATH=/app
+
+CMD ["python", "-m", "detector_agent.main"]

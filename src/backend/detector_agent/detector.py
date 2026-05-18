@@ -102,7 +102,16 @@ class FruitDetector:
         logger.info(f"Cargando modelo YOLO desde {path}...")
 
         try:
-            self.model = YOLO(str(path))
+            if not Path(path).exists():
+                logger.warning(
+                    "Modelo local no encontrado en %s. "
+                    "Se usará el modelo YOLOv8n por defecto como fallback.",
+                    path,
+                )
+                self.model = YOLO("yolov8n.pt")
+            else:
+                self.model = YOLO(str(path))
+
             logger.info("Modelo cargado correctamente")
 
             # Validar que el modelo se cargó correctamente

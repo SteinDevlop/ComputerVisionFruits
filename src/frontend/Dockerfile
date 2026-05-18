@@ -2,9 +2,9 @@
 # Stage 1: build React
 FROM node:20-alpine AS builder
 WORKDIR /build
-COPY frontend/package*.json ./
+COPY src/frontend/package*.json ./
 RUN npm install
-COPY frontend/ .
+COPY src/frontend/ .
 RUN npm run build
 
 # Stage 2: serve con nginx

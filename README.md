@@ -1,18 +1,20 @@
 # 🍎 Fruit AI System
 
-Sistema multi-agente para detección y clasificación de frutas en tiempo real.
+Sistema de detección y clasificación de frutas en tiempo real.
 
 ---
 
 ## Arquitectura
 
 ```
-Cámara → Detector (YOLO) → Tracker → Cropper → POST /clasificar → Clasificador → Resultado
+Cámara / Video → Gateway (FastAPI + React) → Classifier API → Resultado
 ```
 
-Dos servicios independientes:
-- **detector_agent** — lee video, detecta, trackea, envía crops
-- **classifier_api** — recibe imagen base64, retorna tipo de fruta + confianza
+Servicios en despliegue:
+- **gateway** — frontend + backend web que orquesta la carga de video, la detección y las llamadas al clasificador
+- **classifier_api** — servicio FastAPI que recibe imagen base64 y retorna fruta + confianza
+
+> Nota: `detector_agent` ya no se despliega como servicio independiente; su lógica de desarrollo permanece en `src/backend/detector_agent`.
 
 ---
 
@@ -20,40 +22,49 @@ Dos servicios independientes:
 
 ```
 fruit-ai-system/
-├── data/training/
-│   ├── detector/
-│   │   ├── train.py        # fine-tuning YOLO
-│   │   └── dataset.py      # dataset.yaml + utilidades
-│   └── classifier/
-│       ├── train.py        # fine-tuning clasificador
-│       └── dataset.py      # FruitDataset + transforms
-│
-├── models/
-│   ├── pretrained/         # poner aqui modelos base
-│   └── finetuned/          # detector_best.pt + classifier_best.pt
-│
-├── detector_agent/
-│   ├── main.py             # loop principal
-│   ├── detector.py         # wrapper YOLO
-│   ├── tracker.py          # asignacion de IDs
-│   ├── cropper.py          # recorte + base64
-│   └── client.py           # HTTP client → /clasificar
-│
-├── classifier_api/
-│   ├── main.py             # FastAPI app
-│   ├── routes.py           # GET /health, POST /clasificar
-│   ├── inference.py        # FruitClassifier singleton
-│   └── schema.py           # Pydantic models
-│
-├── shared/
-│   └── config.py           # configuracion centralizada
-│
+├── src/backend/
+│   ├── classifier_api/
+│   │   ├── main.py             # FastAPI app
+│   │   ├── routes.py           # GET /health, POST /clasificar
+│   │   ├── inference.py        # FruitClassifier singleton
+│   │   └── schema.py           # Pydantic models
+│   ├── data/training/
+│   │   ├── detector/
+│   │   │   ├── train.py        # fine-tuning YOLO
+│   │   │   └── dataset.py      # dataset.yaml + utilidades
+│   │   └── classifier/
+│   │       ├── train.py        # fine-tuning clasificador
+│   │       └── dataset.py      # FruitDataset + transforms
+│   ├── detector_agent/
+│   │   ├── cropper.py          # recorte + base64
+│   │   ├── detector.py         # wrapper YOLO
+│   │   ├── logger_config.py
+│   │   ├── tracker.py          # asignacion de IDs
+│   │   └── client.py           # HTTP client → /clasificar
+│   ├── database/
+│   ├── models/
+│   │   ├── pretrained/         # poner aqui modelos base
+│   │   └── finetuned/          # detector_best.pt + classifier_best.pt
+│   └── shared/
+│       └── config.py           # configuracion centralizada
+├── src/frontend/
+│   ├── backend/
+│   │   ├── main.py
+│   │   ├── camera_processor.py
+│   │   ├── processor.py
+│   │   ├── requirements.txt
+│   │   └── __init__.py
+│   ├── uploads/
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
 └── deployment/
     ├── docker-compose.yml
     ├── Dockerfile.classifier
-    ├── Dockerfile.detector
+    ├── Dockerfile.gateway
+    ├── nginx.conf
     ├── requirements.classifier.txt
-    ├── requirements.detector.txt
     └── requirements.training.txt
 ```
 
@@ -64,7 +75,8 @@ fruit-ai-system/
 ### 1. Entrenar modelos
 
 ```bash
-pip install -r deployment/requirements.training.txt
+cd src/backend
+pip install -r ../deployment/requirements.training.txt
 
 # Detector
 python -m data.training.detector.train
@@ -73,13 +85,13 @@ python -m data.training.detector.train
 python -m data.training.classifier.train
 ```
 
-Modelos se guardan en `models/finetuned/`.
+Modelos se guardan en `src/backend/models/finetuned/`.
 
 ### 2. Levantar con Docker
 
 ```bash
 cd deployment
-docker-compose up --build
+docker compose up --build
 ```
 
 ### 3. Test manual del clasificador
