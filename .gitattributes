@@ -1,0 +1,16 @@
+# Establecer el comportamiento predeterminado para normalizar los saltos de línea a LF en los commits
+# y forzar LF en la copia de trabajo local (evita conversiones automáticas a CRLF en Windows)
+* text=auto eol=lf
+
+# Forzar explícitamente LF en archivos críticos para Docker y entornos Linux
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.conf text eol=lf
+Dockerfile* text eol=lf
+*.json text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.css text eol=lf
+*.py text eol=lf
+*.html text eol=lf

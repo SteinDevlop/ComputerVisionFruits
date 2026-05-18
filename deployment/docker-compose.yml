@@ -1,6 +1,8 @@
 # deployment/docker-compose.yml
+
 services:
 
+  # ─── Classifier API (modelo EfficientNet-B0) ────────────────────────
   classifier_api:
     build:
       context: ..
@@ -9,11 +11,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ../models:/app/models:ro          # modelos read-only
-      - ../classifier_api:/app/classifier_api  # Mapea tu código de la API vivo
-      - ../shared:/app/shared                  # Mapea códigos compartidos
+      - ../models:/app/models:ro
+      - ../classifier_api:/app/classifier_api
+      - ../shared:/app/shared
       - ../database:/app/database
-    command: ["uvicorn", "classifier_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"] # Activa el reload automático de FastAPI
+    command: ["uvicorn", "classifier_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
@@ -22,27 +24,54 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
-  detector_agent:
+  # ─── Backend Gateway (YOLO + FastAPI) ───────────────────────────────
+  gateway:
     build:
       context: ..
-      dockerfile: deployment/Dockerfile.detector
-    container_name: detector_agent
+      dockerfile: deployment/Dockerfile.gateway
+    container_name: frutvision_gateway
+    ports:
+      - "8080:8080"
     depends_on:
       classifier_api:
         condition: service_healthy
     volumes:
       - ../models:/app/models:ro
-      - ../detector_agent:/app/detector_agent  # Mapea tu agente en vivo
-      - ../shared:/app/shared
       - ../data:/app/data
-      # TODO: montar dispositivo de camara si es necesario
-      # devices:
-      #   - /dev/video0:/dev/video0
+      - ../frontend/uploads:/app/frontend/uploads
+      # ── Montar código fuente en vivo (como classifier_api) ──
+      # Cualquier cambio Python → solo necesitas: docker-compose restart gateway
+      - ../frontend/backend:/app/frontend/backend
+      - ../frontend/__init__.py:/app/frontend/__init__.py
+      - ../detector_agent:/app/detector_agent
+      - ../shared:/app/shared
+      - ../database:/app/database
+    command: ["uvicorn", "frontend.backend.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
     environment:
       - PYTHONUNBUFFERED=1
       - CLASSIFIER_HOST=http://classifier_api
       - CLASSIFIER_PORT=8000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ─── Frontend (React + Nginx) ────────────────────────────────────────
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    container_name: frutvision_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      gateway:
+        condition: service_healthy
     restart: unless-stopped
 
 networks:
