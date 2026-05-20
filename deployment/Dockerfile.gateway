@@ -10,20 +10,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 libsm6 libxrender1 libxext6 libgl1 curl ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
+
+
 # Dependencias Python del classifier
 COPY deployment/requirements.classifier.txt ./req_classifier.txt
 RUN pip install --no-cache-dir -r req_classifier.txt
 
 # Dependencias del gateway
-COPY src/frontend/backend/requirements.txt ./req_gateway.txt
+COPY frontend/backend/requirements.txt ./req_gateway.txt
 RUN pip install --no-cache-dir -r req_gateway.txt
 
 # Código fuente
-COPY src/backend/shared/          ./shared/
-COPY src/backend/classifier_api/  ./classifier_api/
-COPY src/backend/database/        ./database/
-COPY src/frontend/backend/        ./frontend/backend/
-COPY src/frontend/__init__.py     ./frontend/__init__.py
+COPY shared/          ./shared/
+COPY detector_agent/  ./detector_agent/
+COPY classifier_api/  ./classifier_api/
+COPY database/        ./database/
+COPY frontend/backend/ ./frontend/backend/
+COPY frontend/__init__.py ./frontend/__init__.py
 
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
