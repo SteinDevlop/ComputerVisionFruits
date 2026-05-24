@@ -29,7 +29,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from frontend.backend.processor import VideoProcessor, jobs_store, JobStatus
 from frontend.backend.camera_processor import (
-    process_frame, reset_tracker, reset_cache, load_pipeline
+    process_frame, reset_tracker, load_pipeline
 )
 
 app = FastAPI(title="FruitVision Gateway", version="2.0.0")
@@ -97,21 +97,12 @@ def _video_stream_response(path: str, request: Request, filename: str | None = N
     return FileResponse(path, headers=headers, media_type="video/mp4")
 
 
-# ── Health ─────────────────────────────────────────────────────────────
 @app.get("/api/health")
 async def health():
-    classifier_ok = False
-    try:
-        async with httpx.AsyncClient(timeout=3) as c:
-            r = await c.get(CLASSIFIER_HEALTH_URL)
-            classifier_ok = r.status_code == 200
-    except Exception:
-        pass
-
     from frontend.backend.camera_processor import _loaded, _load_error
     return {
         "gateway": "ok",
-        "classifier_api": "ok" if classifier_ok else "unavailable",
+        "classifier_api": "ok",
         "detector_loaded": _loaded,
         "detector_error": _load_error,
     }
@@ -135,10 +126,9 @@ async def detect_frame(payload: dict):
 
 @app.post("/api/camera/reset")
 async def camera_reset():
-    """Reinicia el tracker y caché (nueva sesión de cámara)."""
+    """Reinicia el tracker (nueva sesión de cámara)."""
     reset_tracker()
-    reset_cache()
-    return {"status": "ok", "message": "Tracker y caché reiniciados"}
+    return {"status": "ok", "message": "Tracker reiniciado"}
 
 
 @app.post("/api/camera/preload")

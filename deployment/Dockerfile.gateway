@@ -12,10 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 
 
-# Dependencias Python del classifier
-COPY deployment/requirements.classifier.txt ./req_classifier.txt
-RUN pip install --no-cache-dir -r req_classifier.txt
-
 # Dependencias del gateway
 COPY src/frontend/backend/requirements.txt ./req_gateway.txt
 RUN pip install --no-cache-dir -r req_gateway.txt
@@ -23,7 +19,6 @@ RUN pip install --no-cache-dir -r req_gateway.txt
 # Código fuente
 COPY src/backend/shared/          ./shared/
 COPY src/backend/detector_agent/  ./detector_agent/
-COPY src/backend/classifier_api/  ./classifier_api/
 COPY src/backend/database/        ./database/
 COPY src/frontend/backend/        ./frontend/backend/
 COPY src/frontend/__init__.py     ./frontend/__init__.py

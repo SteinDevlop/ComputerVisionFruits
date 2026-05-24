@@ -1,6 +1,7 @@
 """
 frontend/backend/processor.py
 Procesamiento de video en background thread.
+Pipeline de 1 etapa: YOLOv8 unificado (best.pt)
 """
 import asyncio
 import sys
@@ -38,21 +39,41 @@ class VideoProcessor:
             job["progress"] = 2
 
             import cv2
+            import json
             from detector_agent.detector import FruitDetector
             from detector_agent.tracker import FruitTracker
-            from detector_agent.cropper import Cropper
-            from detector_agent.client import ClassifierClient
             from detector_agent.visualizer import FrameVisualizer
 
             job["progress"] = 5
-            detector = FruitDetector(conf_threshold=0.4, adaptive_confidence=True, preprocess_frames=True)
-            detector.load_model()
-            tracker = FruitTracker()
-            cropper = Cropper()
-            client = ClassifierClient()
 
+            # Etapa única: Detector YOLOv8 unificado
+            detector = FruitDetector(
+                conf_threshold=0.30,
+                adaptive_confidence=True,
+                preprocess_frames=True,
+            )
+            
+            # Cargar el modelo best.pt unificado
+            unified_model_path = PROJECT_ROOT / "backend" / "models" / "finetuned" / "best.pt"
+            if not unified_model_path.exists():
+                unified_model_path = PROJECT_ROOT / "models" / "finetuned" / "best.pt"
+                
+            detector.load_model(model_path=unified_model_path)
+
+            tracker = FruitTracker()
             job["status"] = JobStatus.PROCESSING
             job["progress"] = 10
+
+            # Cargar base de datos de precios
+            precios_db = {}
+            for candidate in [
+                PROJECT_ROOT / "backend" / "database" / "precios.json",
+                PROJECT_ROOT / "database" / "precios.json",
+            ]:
+                if candidate.exists():
+                    with open(candidate, "r", encoding="utf-8") as f:
+                        precios_db = json.load(f)
+                    break
 
             cap = cv2.VideoCapture(input_path)
             if not cap.isOpened():
@@ -77,36 +98,43 @@ class VideoProcessor:
                 if not ret:
                     break
                 try:
+                    # ── Etapa Única: Detectar y clasificar con YOLO ──
                     dets = detector.detect(frame)
                     objetos = tracker.update(dets)
-                    alto, ancho = frame.shape[:2]
-                    cx = ancho / 2
-                    mx = ancho * 0.20
 
                     for obj in objetos:
                         if not obj.clasificado:
-                            x1, y1, x2, y2 = obj.detection.bbox
-                            if abs((x1 + x2) / 2 - cx) <= mx:
-                                try:
-                                    b64 = cropper.procesar(frame, obj)
-                                    res = client.clasificar(obj.id_objeto, b64)
-                                    if res:
-                                        objects_info[obj.id_objeto] = {
-                                            "fruta": res.fruta,
-                                            "confianza": res.confianza,
-                                            "precio": res.precio,
-                                        }
-                                        if res.fruta not in ["Unknown Label", "Unknown", "Desconocida"]:
-                                            obj.clasificado = True
-                                        existing = next((d for d in detections_log if d["fruta"] == res.fruta), None)
-                                        if not existing:
-                                            detections_log.append({
-                                                "fruta": res.fruta,
-                                                "confianza": res.confianza,
-                                                "precio": res.precio,
-                                            })
-                                except Exception:
-                                    pass
+                            conf = obj.detection.confidence
+                            if conf < 0.30:
+                                continue
+                                
+                            class_id = obj.detection.class_id
+                            if hasattr(detector.model, 'names'):
+                                yolo_label = detector.model.names[class_id]
+                            else:
+                                yolo_label = f"Clase_{class_id}"
+                                
+                            fruta = yolo_label.capitalize()
+                            precio = precios_db.get(fruta, 0)
+
+                            obj.clasificado = True
+                            obj.etiqueta = fruta
+                            obj.confianza = conf
+                            obj.precio = precio
+
+                            objects_info[obj.id_objeto] = {
+                                "fruta": fruta,
+                                "confianza": conf,
+                                "precio": precio,
+                            }
+
+                            existing = next((d for d in detections_log if d["fruta"] == fruta), None)
+                            if not existing:
+                                detections_log.append({
+                                    "fruta": fruta,
+                                    "confianza": conf,
+                                    "precio": precio,
+                                })
 
                     if frame_id == 0 and visualizer.writer is None:
                         visualizer.initialize_writer(frame, fps=fps)
@@ -128,8 +156,6 @@ class VideoProcessor:
             visualizer.cleanup()
 
             # ── Convertir mp4v → H.264 para reproducción en navegador ──
-            # Los navegadores solo reproducen H.264 nativamente; mp4v (MPEG-4 Part 2)
-            # requiere plugins o descarga completa del archivo.
             job["progress"] = 97
             job["status"] = "converting"
             final_path = str(output_path)
@@ -143,8 +169,8 @@ class VideoProcessor:
                         "-c:v", "libx264",
                         "-preset", "fast",
                         "-crf", "23",
-                        "-movflags", "+faststart",  # moov al inicio → streaming inmediato
-                        "-an",                       # sin audio (videos de detección no tienen)
+                        "-movflags", "+faststart",
+                        "-an",
                         h264_path,
                     ],
                     capture_output=True, timeout=600
@@ -152,9 +178,8 @@ class VideoProcessor:
                 if result.returncode == 0 and Path(h264_path).exists():
                     Path(output_path).unlink(missing_ok=True)
                     final_path = h264_path
-                # Si ffmpeg falla, se usa el archivo original (descargable pero no streameable)
             except Exception:
-                pass  # ffmpeg no disponible → usar mp4v original
+                pass
 
             job["status"] = JobStatus.DONE
             job["progress"] = 100

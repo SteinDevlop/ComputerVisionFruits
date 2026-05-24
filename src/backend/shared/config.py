@@ -7,8 +7,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 class DetectorConfig:
     MODEL_PATH = BASE_DIR / "models" / "finetuned" / "detector_best.pt"
+    CLASSIFIER_MODEL_PATH = BASE_DIR / "models" / "finetuned" / "best.pt"
     
-    CONFIDENCE_THRESHOLD: float = 0.40  
+    CONFIDENCE_THRESHOLD: float = 0.30  
     IOU_THRESHOLD: float = 0.45
     VIDEO_SOURCE = "data/prueba.mp4" # 0 = camara, o path a video
     FRAME_WIDTH: int = 1280
@@ -20,21 +21,12 @@ class DetectorConfig:
     MULTI_SCALE_DETECTION: bool = False  # Detección en múltiples escalas (más lento)
 
 class ClassifierConfig:
-    MODEL_PATH = BASE_DIR / "models" / "finetuned" / "classifier_best.pt"
-    HF_MODEL_ID: str = "bhumong/fruit-classifier-efficientnet-b0"
-    CLASSES: list[str] = [
-        "Apple", "Apricot", "Avocado", "Banana", "Beans", "Beetroot", "Blackberry",
-        "Blueberry", "Cabbage", "Cactus", "Caju", "Cantaloupe", "Carambula", "Carrot",
-        "Cauliflower", "Cherry", "Chestnut", "Clementine", "Cocona", "Corn", "Cucumber",
-        "Dates", "Eggplant", "Fig", "Ginger", "Gooseberry", "Granadilla", "Grape",
-        "Grapefruit", "Guava", "Hazelnut", "Huckleberry", "Kiwi", "Kohlrabi", "Lemon",
-        "Limes", "Lychee", "Mango", "Mangostan", "Maracuja", "Melon", "Mulberry",
-        "Nectarine", "Nut", "Onion", "Orange", "Papaya", "Passion", "Peach", "Pear",
-        "Pepino", "Pepper", "Physalis", "Pineapple", "Pistachio", "Pitahaya", "Plum",
-        "Pomegranate", "Potato", "Quince", "Rambutan", "Raspberry", "Redcurrant",
-        "Salak", "Strawberry", "Tamarillo", "Tangelo", "Tomato", "Walnut", "Watermelon"
+    MODEL_PATH = BASE_DIR / "models" / "finetuned" / "best.pt"
+    FRUIT_CLASSES: list[str] = [
+        "apple", "avocado", "banana", "grapes", "guava", "kiwi",
+        "mango", "orange", "peach", "pineapple", "sugarapple", "watermelon"
     ]
-    IMAGE_SIZE: int = 224
+    IMAGE_SIZE: int = 640
 
 class APIConfig:
     CLASSIFIER_HOST: str = os.getenv("CLASSIFIER_HOST", "http://localhost")
