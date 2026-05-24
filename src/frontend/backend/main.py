@@ -42,15 +42,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-CLASSIFIER_URL = os.getenv(
-    "CLASSIFIER_URL",
-    f"{os.getenv('CLASSIFIER_HOST', 'http://localhost')}:{os.getenv('CLASSIFIER_PORT', '8000')}/health"
-)
-# URL base del classifier para el health check
-CLASSIFIER_HEALTH_URL = (
-    f"{os.getenv('CLASSIFIER_HOST', 'http://localhost')}:{os.getenv('CLASSIFIER_PORT', '8000')}/health"
-)
-
 
 def _video_stream_response(path: str, request: Request, filename: str | None = None):
     """Sirve un video con soporte correcto de Range requests para HTML5."""
